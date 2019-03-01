@@ -74,19 +74,19 @@ class PageElement(object):
         Use this tag name locator
     :param class_:    `str`
         Use this class locator
-    :param context: `bool`
-        This element is expected to be called with context
+    :param context: `str`
+        This element will be found with context
     Page Elements are used to access elements on a page. The are constructed
     using this factory method to specify the locator for the element.
         >> from page_objects import PageObject, PageElement
         >> class MyPage(PageObject):
                 elem1 = PageElement(css='div.myclass')
                 elem2 = PageElement(id_='foo')
-                elem_with_context = PageElement(name='bar', context=True)
+                elem_with_context = PageElement(name='bar', context='elem1')
     Page Elements act as property descriptors for their Page Object, you can get
     and set them as normal attributes.
     """
-    def __init__(self, context=False, timeout=10, describe=None, **kwargs):
+    def __init__(self, context=None, callable_with_context=False, timeout=10, describe=None, **kwargs):
         self.time_out = timeout
         if not kwargs:
             raise ValueError("Please specify a locator")
@@ -97,7 +97,8 @@ class PageElement(object):
             self.locator = (LOCATOR_LIST[k], v)
         except KeyError:
             raise KeyError("Please use a locator：'id_'、'name'、'class_'、'css'、'xpath'、'link_text'、'partial_link_text'.")
-        self.has_context = bool(context)
+        self.context = context
+        self.callable_with_context = callable_with_context
 
     def get_element(self, context):
         try:
@@ -114,21 +115,23 @@ class PageElement(object):
         else:
             return None
 
-    def __get__(self, instance, owner, context=None):
+    def __get__(self, instance, owner):
         if not instance:
             return None
 
-        if not context and self.has_context:
-            return lambda ctx: self.__get__(instance, owner, context=ctx)
+        if self.callable_with_context:
+            return lambda ctx: self.find(ctx)
 
-        if not context:
+        if type(self.context) is str:
+            context = instance.__getattribute__(self.context)
+        else:
             context = instance.driver
 
         return self.find(context)
 
     def __set__(self, instance, value):
-        if self.has_context:
-            raise ValueError("Sorry, the set descriptor doesn't support elements with context.")
+        if(self.callable_with_context):
+            raise ValueError("Sorry, the set descriptor doesn't support callable_with_context element.")
         elem = self.__get__(instance, instance.__class__)
         if not elem:
             raise ValueError("Can't set value, element not found")
@@ -151,8 +154,8 @@ class PageElements(PageElement):
             return []
 
     def __set__(self, instance, value):
-        if self.has_context:
-            raise ValueError("Sorry, the set descriptor doesn't support elements with context.")
+        if(self.callable_with_context):
+            raise ValueError("Sorry, the set descriptor doesn't support callable_with_context element.")
         elems = self.__get__(instance, instance.__class__)
         if not elems:
             raise ValueError("Can't set value, no elements found")
