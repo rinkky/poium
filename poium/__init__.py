@@ -20,8 +20,6 @@
 from .poium import Page
 from .page_objects import PageElement
 from .page_objects import PageElements
-from .page_objects import PageSelect
-from .page_objects import PageWait
 
 __author__ = "rinkky"
 
