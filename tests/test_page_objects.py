@@ -51,13 +51,22 @@ class TestGet:
 
     def test_get_element_with_context(self, webdriver):
         class TestPage(Page):
-            test_elem = PageElement(css='bar', context=True)
+            test_elem = PageElement(css='bar', callable_with_context=True)
 
         page = TestPage(webdriver)
         elem = mock.Mock(spec=WebElement, name="My Elem")
         res = page.test_elem(elem)
         assert elem.find_element.called_once_with(By.CSS_SELECTOR, 'bar')
         assert res == elem.find_element.return_value
+
+    def test_get_element_with_context_1(self, webdriver):
+        class TestPage(Page):
+            elem = mock.Mock(spec=WebElement, name="My Elem")
+            test_elem = PageElement(css='bar', context='elem')
+
+        page = TestPage(webdriver)
+        assert page.elem.find_element.called_once_with(By.CSS_SELECTOR, 'bar')
+        assert page.test_elem == page.elem.find_element.return_value
 
     def test_get_not_found(self, webdriver):
         class TestPage(Page):
@@ -101,15 +110,6 @@ class TestSet:
         assert webdriver.find_elements.called_once_with(By.CSS_SELECTOR, 'foo')
         elem.send_keys.assert_called_once_with('XXX')
 
-    def test_cannot_set_with_context(self, webdriver):
-        class TestPage(Page):
-            test_elem = PageElement(css='foo', context=True)
-
-        page = TestPage(webdriver)
-        with pytest.raises(ValueError) as e:
-            page.test_elem = 'xxx'
-        assert "doesn't support elements with context" in e.value.args[0]
-
     def test_cannot_set_not_found(self, webdriver):
         class TestPage(Page):
             test_elem = PageElement(css='foo')
@@ -133,15 +133,6 @@ class TestSet:
         assert webdriver.find_elements.called_once_with(By.CSS_SELECTOR, 'foo')
         elem1.send_keys.assert_called_once_with('XXX')
         elem2.send_keys.assert_called_once_with('XXX')
-
-    def test_cannot_set_multi_with_context(self, webdriver):
-        class TestPage(Page):
-            test_elem = PageElements(css='foo', context=True)
-
-        page = TestPage(webdriver)
-        with pytest.raises(ValueError) as e:
-            page.test_elem = 'xxx'
-        assert "doesn't support elements with context" in e.value.args[0]
 
     def test_cannot_set_multi_not_found(self, webdriver):
         class TestPage(Page):

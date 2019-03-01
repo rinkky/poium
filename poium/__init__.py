@@ -23,6 +23,15 @@ from .page_objects import PageElements
 from .page_objects import PageSelect
 from .page_objects import PageWait
 
+__author__ = "rinkky"
+
+__version__ = "0.3.1"
+
+'''
+0.3.1 version update:
+* add a new way to get element with context
+* delete PageSelect and PageWait
+'''
 
 __author__ = "fnngj"
 
