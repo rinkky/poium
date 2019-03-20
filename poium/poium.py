@@ -1,6 +1,7 @@
 from time import sleep
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import StaleElementReferenceException
+from appium.webdriver.common.touch_action import TouchAction
 
 from .page_objects import PageObject
 
@@ -223,3 +224,31 @@ class Page(PageObject):
                 sleep(1)
         else:
             raise TimeoutError("stale element reference: element is not attached to the page document.")
+
+    def swipe_in_element(self, elem, from_x=0.5, to_x=0.5, from_y=0.8, to_y=0.2, delay=500):
+        '''
+        for appium
+        :param elem `WebElement`
+            swipe in this element
+        :param delay `int`
+            delay time in ms
+
+        example:
+            self.swipe_in_element(elem_a, from_x=0.5, to_x=0.5, from_y=0.8, to_y=0.2, delay=1000)
+            # swipe in elem_a, from 80% to 20% (from bottom to top)
+
+            self.swipe_in_element(elem_b, from_x=0.1, to_x=0.9, from_y=0.5, to_y=0.5, delay=1000)
+            # swipe in elem_b, from 10% to 90% (from left to right)
+        '''
+        elem_location = elem.location
+        elem_size = elem.size
+        from_x = elem_location['x'] + (elem_size['width'] * from_x)
+        to_x = elem_location['x'] + (elem_size['width'] * to_x)
+        from_y = elem_location['y'] + (elem_size['height'] * from_y)
+        to_y = elem_location['y'] + (elem_size['height'] * to_y)
+        action = TouchAction(self.driver)
+        action.press(x=from_x, y=from_y)
+        action.wait(delay)
+        action.move_to(x=to_x, y=to_y)
+        action.release()
+        action.perform()
